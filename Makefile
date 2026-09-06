@@ -10,7 +10,7 @@ STAGE35_RUN_ID ?=
 .PHONY: help install frontend-install backend-install infra-up infra-down infra-logs \
 	frontend-dev backend-dev backend-test backend-lint backend-format frontend-lint \
 	frontend-build db-migrate temporal-worker temporal-demo stage2-demo \
-	ollama-eval stage3-demo stage35-demo temporal-infra-check check
+	ollama-eval stage3-demo stage35-demo temporal-infra-check check clean
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' "$(ROOT_DIR)/Makefile"
@@ -104,3 +104,9 @@ temporal-infra-check: ## Check PostgreSQL, Temporal gRPC, and the Temporal Web U
 	@echo "Temporal Web UI is reachable at http://localhost:8233"
 
 check: backend-lint backend-test frontend-lint frontend-build ## Run all tests and checks
+ 
+clean: ## Remove temporary caches, build artifacts, and OS metadata
+	find . -name ".DS_Store" -delete
+	rm -rf .pytest_cache .ruff_cache backend/.pytest_cache backend/.ruff_cache frontend/.next frontend/tsconfig.tsbuildinfo
+	find backend scripts -name "__pycache__" -type d -not -path "*/.venv/*" -exec rm -rf {} +
+	find backend scripts -name "*.pyc" -not -path "*/.venv/*" -delete

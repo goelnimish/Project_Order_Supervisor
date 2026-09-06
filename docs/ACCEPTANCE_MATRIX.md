@@ -1,10 +1,9 @@
 # Order Supervisor POC — Acceptance Matrix
 
-This matrix maps the original assignment to implementation and evidence. Internal
-stage completion does not mean the entire final POC is complete. Stage 0 through
-Stage 4.6 are internally complete; future requirements remain `PARTIAL` or `NOT STARTED`
-until they are actually implemented and validated. Video timestamps remain `TBD`
-until the final walkthrough is recorded.
+This matrix maps the original assignment to implementation and evidence. Stages
+0 through 4.6 are complete. Stage 5 documentation is complete for this pass;
+execution-based validation and the owner-recorded walkthrough remain explicitly
+open. Video timestamps remain `TBD` until the final walkthrough is recorded.
 
 | Internal stage | Scope | Status |
 |---|---|---|
@@ -16,7 +15,7 @@ until the final walkthrough is recorded.
 | Stage 4 | Functional operational Next.js UI | COMPLETE |
 | Stage 4.5 | Basic QA and original-assignment acceptance validation | COMPLETE |
 | Stage 4.6 | Workflow-owned semantic duplicate-action protection | COMPLETE |
-| Stage 5 | Final end-to-end validation, architecture note, README completion, and walkthrough video | NOT STARTED |
+| Stage 5 | Final submission documentation and manual runbook; validation and video are owner follow-ups | PARTIAL |
 
 | ID | Assignment requirement | Implementation location | Validation evidence | Video timestamp | Status |
 |---|---|---|---|---|---|
@@ -115,11 +114,11 @@ until the final walkthrough is recorded.
 | UI-11 | Operate lifecycle controls | `frontend/components/lifecycle-controls.tsx`; `frontend/lib/run-status.ts` | Run `09931af9-de44-47fa-b848-dd593b361022` durably validated pause → resume → interrupt for human review → resume. Disposable run `95d526be-1175-42bd-be78-bc805b16e7a3` accepted a reasoned graceful termination, generated final output, and ended Terminated; run `a481ce3c-f1ed-43a7-9746-aa4570654b5e` was also gracefully terminated after duplicate-conflict validation. | TBD | COMPLETE |
 | UI-12 | Inspect final output | `frontend/components/final-output-panel.tsx`; persisted `run.final_output` | Completed run `09931af9-de44-47fa-b848-dd593b361022` and terminated run `95d526be-1175-42bd-be78-bc805b16e7a3` rendered non-placeholder Final Summary, Important Actions, Key Learnings, and Recommendations; active runs rendered the explicit not-yet-available state. | TBD | COMPLETE |
 | FD-01 | Source code | Stage 0 through Stage 4 source exists across `frontend/`, `backend/`, and `scripts/`; the operational UI uses no new dependency or architectural layer. | Recorded Stage 4 combined-audit evidence: 98 backend tests, Ruff, 14 analytics tests, Stage 1/2/3/3.5 demos, 5/5 Ollama evaluation, frontend ESLint, standalone TypeScript, webpack production build, and the complete real-browser flow passed. Final Stage 5 fresh-environment validation remains separate. | TBD | COMPLETE |
-| FD-02 | Complete README | `README.md` documents setup, providers, actions, memory, finalization, APIs, boundaries, checks, Stage 4 startup, routes, polling, real browser demo, and video ownership. | The documented Stage 4 path was executed in the production browser; final Stage 5 architecture and recording-support material remains intentionally separate. | TBD | PARTIAL |
-| FD-03 | Short architecture note | Not implemented. | No final architecture-note artifact or validation evidence exists. | TBD | NOT STARTED |
+| FD-02 | Complete README | `README.md` documents setup, providers, actions, memory, finalization, APIs, boundaries, routes, polling, the full five-terminal startup order, manual end-to-end operation, safe shutdown, and video ownership. | Manual runbook reviewed against the checked-in Makefile, Compose file, API routes, and UI controls. No automated regression was run in this pass. | TBD | COMPLETE |
+| FD-03 | Short architecture note | `docs/ARCHITECTURE.md` | Short note covers components, lifecycle, Temporal/AI boundary, memory/timeline, idempotency, persistence, and failure handling without production claims. | TBD | COMPLETE |
 | FD-04 | Walkthrough video | Not implemented. | No final recording or validation evidence exists. | TBD | NOT STARTED |
 | FD-05 | Walkthrough covers every mandatory acceptance criterion | Not implemented. | No walkthrough timestamps or coverage validation exists. | TBD | NOT STARTED |
-| FD-06 | Final fresh-setup validation | Not implemented. | No final clean-environment validation record exists. | TBD | NOT STARTED |
+| FD-06 | Final fresh-setup validation | Not run by request. | The repository owner requested documentation and manual instructions only; no clean-environment install or regression commands were executed in this pass. | TBD | NOT STARTED |
 | FD-07 | Final end-to-end scenario | Not implemented; the complete Stage 1 Temporal demo is not the final cross-stack scenario. | No Stage 5 end-to-end validation evidence exists. | TBD | NOT STARTED |
 
 ## Interpretation Notes
