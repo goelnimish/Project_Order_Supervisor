@@ -9,6 +9,8 @@
 /.cursor/
 /.grok/
 /.impeccable/
+AGENTS.md
+*agent*.md
 
 # JavaScript
 /frontend/node_modules/

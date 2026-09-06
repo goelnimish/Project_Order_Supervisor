@@ -59,7 +59,7 @@ In traditional systems, order exception handling either requires rigid rule engi
     │   │   └── temporal/            Workflow, Activities, policy, and DTOs
     │   ├── migrations/versions/     Reversible PostgreSQL schema revisions
     │   └── tests/                   API, provider, action, and Workflow coverage
-    ├── docs/                        Assignment acceptance matrix
+    ├── docs/                        Architecture, specifications, and guides
     ├── scripts/                     Stage 1 through Stage 3.5 demonstrations
     ├── docker-compose.yml           Local PostgreSQL and Temporal services
     ├── Makefile                     Local development commands
