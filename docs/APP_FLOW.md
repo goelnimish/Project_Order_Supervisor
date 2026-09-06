@@ -22,7 +22,7 @@ sequenceDiagram
     participant LLM as Supervisor Activity (Ollama/Mock)
 
     Operator->>UI: Select config & click "Start Order Run"
-    UI->>API: POST /api/supervisors/{id}/runs {order_id, initial_state}
+    UI->>API: POST /api/runs {supervisor_config_id, order_id, order_context}
     API->>DB: INSERT INTO runs (status='starting', order_id)
     Note over API,DB: Enforces uq_runs_active_order_id
     API->>Temporal: StartWorkflow(order-supervisor:{order_id})
