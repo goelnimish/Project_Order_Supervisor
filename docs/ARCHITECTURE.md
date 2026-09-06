@@ -1,117 +1,105 @@
-# Order Supervisor architecture
+# Order Supervisor — System Architecture
 
-## Overview
+An auditable, durable AI supervisor for long-running order lifecycles built with **Temporal**, **FastAPI**, **PostgreSQL**, **Next.js**, and local LLMs (**Ollama / Qwen**).
 
-Order Supervisor is a local proof of concept that keeps one durable Temporal
-Workflow alive for one order. Operators configure a supervisor, start a run,
-send order events and instructions, and inspect the resulting state and audit
-history in the browser. The system is intentionally small: business actions are
-simulated and PostgreSQL is the operational read model, not a replacement for
-Temporal's workflow history.
+---
 
-The request path is:
+## 1. High-Level Architecture
 
-```text
-Next.js operator console -> FastAPI control plane -> Temporal Workflow
-                                                    -> Supervisor Activity
-                                                       (deterministic rules or Ollama/qwen3:1.7b)
-                                                    -> Business-action Activities
-                                                    -> PostgreSQL projection/audit log
+The platform separates **durable workflow orchestration** from **AI decision-making** and **operator visibility**:
+
+```mermaid
+flowchart TD
+    subgraph ClientTier["1. Operator Surface"]
+        UI["Next.js Console<br/>(Dashboard, Timeline, Controls)"]
+    end
+
+    subgraph APITier["2. Control Plane"]
+        API["FastAPI Backend<br/>(REST APIs & Signal Dispatch)"]
+    end
+
+    subgraph DataTier["3. State & Audit Store"]
+        DB[("PostgreSQL 16<br/>(Runs, Activities, Analytics)")]
+    end
+
+    subgraph OrchestrationTier["4. Durable Orchestration Engine"]
+        Temporal["Temporal Cluster<br/>(Workflow Execution & Signals)"]
+        Worker["Temporal Worker<br/>(OrderSupervisorWorkflow)"]
+    end
+
+    subgraph IntelligenceTier["5. Supervised Intelligence & Actions"]
+        LLM["AI Supervisor Activity<br/>(Ollama / Qwen / Deterministic)"]
+        Actions["Simulated Business Actions<br/>(Fulfillment, Payments, Logistics)"]
+    end
+
+    UI -->|HTTP REST| API
+    API -->|Persist Metadata| DB
+    API -->|Signals & Starts| Temporal
+    Temporal -->|Executes Workflow| Worker
+    Worker -->|Invoke Activity| LLM
+    Worker -->|Execute Action| Actions
+    Worker -->|Persist Activity Log| DB
+    UI -.->|Poll Read Model| API
 ```
 
-## Main components
+---
 
-- **Next.js App Router:** renders supervisor setup, run lists, run detail, timeline,
-  memory, controls, final output, and analytics. It polls the API for the small
-  amount of eventual consistency between a Signal and its PostgreSQL projection.
-- **FastAPI:** validates HTTP requests, persists supervisor/run records, starts
-  Workflows, sends Signals, and serves the PostgreSQL-backed read model.
-- **Temporal Worker:** registers `OrderSupervisorWorkflow` and its Activities on
-  the `order-supervisor` task queue. Workflow code owns state, timers, Signals,
-  and lifecycle decisions.
-- **Supervisor Provider:** exposes one typed decision contract. The deterministic
-  provider is useful for repeatable development; the Ollama provider calls the
-  local `qwen3:1.7b` model from an Activity and validates its structured output.
-- **Business Actions:** an explicit allowlisted dispatcher implements exactly
-  `message_fulfillment_team`, `message_payments_team`,
-  `message_logistics_team`, `message_customer`, and `create_internal_note`.
-  Each action is a local simulation with a persistent evidence row.
-- **PostgreSQL:** stores supervisor configurations, run snapshots, final output,
-  and the unified activity timeline used by the UI and analytics endpoints.
-- **Ollama:** optional local model runtime. It is never called directly from
-  Workflow code; the network request runs inside the supervisor Activity.
+## 2. Core Architectural Pillars
 
-## Workflow lifecycle
+### Pillar 1: Durable Workflow Orchestration (Temporal)
+* **One Workflow Per Order:** Each order lifecycle is managed by an independent Temporal workflow (`order-supervisor:{order_id}`).
+* **True Durable Sleep (No Busy Polling):** Workflows sleep durably between milestones and scheduled checks, surviving process restarts, network outages, and server redeployments without consuming compute or API tokens.
+* **Replay-Safe Orchestration:** All business transitions, timers, and signals are deterministically recorded in Temporal's event history.
+
+### Pillar 2: Intelligent Wake Policy (Cost & Noise Reduction)
+Instead of invoking an LLM on every minor event, incoming events (delivered via Temporal Signals) pass through a deterministic wake classifier:
+
+| Event Type | Example Events | Policy Action | LLM Invoked? |
+| :--- | :--- | :--- | :---: |
+| **Routine** | `payment_confirmed`, `shipment_created` | Logged to PostgreSQL timeline; workflow stays asleep | ❌ **No** |
+| **Critical Exception** | `shipment_delayed`, `payment_failed`, `stalled` | Workflow wakes up; passes context to AI supervisor | ✅ **Yes** |
+| **Scheduled Review** | Timer expiration (e.g., every 45 seconds) | Periodic health check across open issues and state | ✅ **Yes** |
+| **Terminal** | `delivered` | Deterministic completion; triggers final synthesis report | ❌ **No** (Deterministic) |
+
+### Pillar 3: Strict AI Guardrails & Bounded Execution
+* **Allowlisted Business Actions:** The AI can only select from 5 strictly typed, pre-authorized actions:
+  1. `message_fulfillment_team`
+  2. `message_payments_team`
+  3. `message_logistics_team`
+  4. `message_customer`
+  5. `create_internal_note`
+* **Zero Autonomous Completion Authority:** The LLM cannot terminate or complete a workflow on its own. Order completion is governed strictly by deterministic lifecycle rules (`delivered` signal).
+* **Compact Rolling Memory:** The AI updates a structured summary (order status, verified facts, open questions, actions taken) rather than processing raw, unbounded chat history.
+
+### Pillar 4: Technical & Semantic Idempotency
+* **Retry Safety:** Activity execution keys combine `workflow_id`, `run_id`, `invocation_number`, and `action_index`. If an activity retries, PostgreSQL enforces unique constraints to prevent duplicate external messages.
+* **Semantic Guardrails:** The workflow tracks action-to-event causality, preventing identical actions from repeatedly firing for the same external trigger event.
+
+---
+
+## 3. Operator Control & Human-in-the-Loop
+
+Operators retain continuous oversight and manual control through the Next.js console:
 
 ```text
-start
-  -> receive a Signal or timer
-  -> classify the trigger (routine, important, or terminal)
-  -> invoke the supervisor when policy requires it
-  -> validate the typed decision and configured action allowlist
-  -> execute a retry-safe business action when proposed
-  -> persist the transition, memory, and run snapshot
-  -> schedule a durable timer and sleep
-  -> repeat until a Workflow-owned completion rule applies
+[ Live Order Run ]
+       │
+       ├──► Pause       : Freezes timers & queued events; pauses AI execution
+       ├──► Resume      : Catches up overdue reviews and processes queued signals
+       ├──► Interrupt   : Immediate human-review state; halts all automated actions
+       ├──► Steer       : Injects live instructions ("Prioritize speed over cost")
+       └──► Terminate   : Graceful operator shutdown with documented reason & final summary
 ```
 
-`payment_confirmed` is a routine event and normally records a suppressed wake.
-`shipment_delayed` is important and wakes the supervisor. `delivered` is a
-terminal order event: it authorizes completion in Workflow code, after which a
-final-output Activity generates the four user-facing sections. Manual graceful
-termination is the other terminal path. An AI completion recommendation is
-recorded as advice only and cannot close the Workflow.
+---
 
-## Why Temporal
+## 4. Technology Stack
 
-Temporal supplies durable timers, Signal delivery, replay-safe orchestration,
-Workflow Queries, and a clear retry boundary for Activities. A sleeping run is
-not a Python polling loop: the Workflow waits on a durable timer or Signal and
-resumes after a process restart. Pause and interrupt block automated inference
-while retaining incoming Signals; resume releases the queued work.
-
-## AI boundary
-
-The LLM proposes a concise decision, optional allowlisted actions, a compact
-memory update, and a bounded next-review delay. Pydantic schemas validate the
-response. The application checks permissions and action arguments, while
-Workflow-owned rules control lifecycle completion. Activities perform all
-nondeterministic work: model calls, PostgreSQL writes, simulated actions, and
-final-report generation. Private chain-of-thought is not stored or displayed.
-
-## Memory and timeline
-
-Each run keeps a bounded structured memory containing order state, important
-facts, open issues, actions taken, active constraints, and the next review. The
-provider receives that summary plus a bounded recent-activity window and live
-instructions. The full important-event, decision, action, instruction, control,
-sleep, and completion history is stored separately in PostgreSQL as the
-auditable timeline.
-
-## Idempotency
-
-Technical retry idempotency uses deterministic keys scoped to the Workflow, run,
-supervisor invocation, and action index. PostgreSQL uniqueness makes a retried
-Activity return the original evidence instead of creating a second message.
-Semantic protection also prevents the same successful action from being
-re-issued for the same wake-worthy external event while allowing a distinct
-event to trigger a new action. Incoming events have stable IDs and duplicates
-are ignored by the Workflow.
-
-## Persistence model
-
-Temporal remains authoritative for live orchestration. Bounded persistence
-Activities append an activity row and update the run snapshot in one PostgreSQL
-transaction. The API and UI read this projection, so a Signal acknowledgement can
-appear before the corresponding row is visible. The UI polls briefly and shows
-the live Workflow Query state when available.
-
-## Failure handling
-
-Supervisor, action, persistence, and final-output Activities use explicit
-timeouts and bounded retries. Invalid or unavailable supervisor output is
-rejected safely, executes no unvalidated action, and schedules another review.
-If final-output generation still fails, a deterministic report is persisted so a
-Workflow-owned terminal result is not lost. Persistence exhaustion keeps the
-transition queued for durable recovery. These are architectural safeguards, not
-unbounded cloud infrastructure guarantees.
+| Layer | Technology | Role |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js 14 (App Router), TypeScript, Tailwind CSS | Real-time operator dashboard and management console |
+| **Backend API** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy (Async) | High-performance control plane and REST interface |
+| **Orchestration** | Temporal Python SDK (`temporalio`) | State-machine lifecycle, timers, and activity dispatch |
+| **Persistence** | PostgreSQL 16 (AsyncPG, Alembic) | Normalized audit trail, activity timeline, and analytics |
+| **Inference** | Ollama (`qwen3:1.7b`) & Deterministic Engine | Structured JSON decision proposals and post-order synthesis |
+| **Infrastructure** | Docker Compose | Local PostgreSQL and Temporal development cluster |
