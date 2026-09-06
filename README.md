@@ -350,9 +350,7 @@ recommendation is audit data only and cannot end a Workflow.
 
 ## Minimal Run Analytics
 
-Stage 3.5 implements the assignment's optional richer run analytics
-Good-to-Have as a deliberately small operator-insight layer. Global analytics
-report total runs, active/completed/terminated outcomes, the wake suppression
+Global analytics report total runs, active/completed/terminated outcomes, the wake suppression
 rate, executed business actions, average time to first intervention, and the
 distribution across the five required action names. Per-run analytics report
 duration, received events, AI supervisor invocations, wake suppressions, and
