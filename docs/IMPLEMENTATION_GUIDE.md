@@ -27,7 +27,7 @@ Order Supervisor Repository Structure
 │   ├── lib/                     Typed API client, status helpers, and data fetchers
 │   └── package.json             Next.js 14, TypeScript, and Tailwind CSS dependencies
 │
-├── docs/                        Complete TPM documentation suite & assignment matrices
+├── docs/                        Complete architecture and technical documentation suite
 ├── scripts/                     Deterministic demonstration and evaluation scripts
 ├── docker-compose.yml           Local PostgreSQL 16 and Temporal development services
 ├── Makefile                     Consolidated developer workflow commands

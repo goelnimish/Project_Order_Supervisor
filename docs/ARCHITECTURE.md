@@ -113,5 +113,5 @@ timeouts and bounded retries. Invalid or unavailable supervisor output is
 rejected safely, executes no unvalidated action, and schedules another review.
 If final-output generation still fails, a deterministic report is persisted so a
 Workflow-owned terminal result is not lost. Persistence exhaustion keeps the
-transition queued for durable recovery. These are interview-POC safeguards, not
-production availability guarantees.
+transition queued for durable recovery. These are architectural safeguards, not
+unbounded cloud infrastructure guarantees.

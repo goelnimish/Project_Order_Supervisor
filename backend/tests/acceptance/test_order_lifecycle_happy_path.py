@@ -1,4 +1,4 @@
-"""Deterministic cross-stack acceptance flows for the original assignment."""
+"""Deterministic cross-stack acceptance flows for order supervisor lifecycle."""
 
 from __future__ import annotations
 
@@ -264,10 +264,10 @@ def _activity_types(run: dict[str, Any]) -> list[str]:
     return [activity["activity_type"] for activity in run["activities"]]
 
 
-async def test_original_assignment_happy_path(
+async def test_order_lifecycle_happy_path(
     acceptance_harness: AcceptanceHarness,
 ) -> None:
-    """Exercise the mandatory assignment journey through API, Temporal, and PostgreSQL."""
+    """Exercise the end-to-end order supervision journey through API, Temporal, and PostgreSQL."""
 
     harness = acceptance_harness
     token = uuid4().hex

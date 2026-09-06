@@ -1,4 +1,4 @@
-"""Small structural assertions for assignment boundaries best checked in source."""
+"""Small structural assertions for project boundaries best checked in source."""
 
 from __future__ import annotations
 

@@ -29,7 +29,7 @@ from app.temporal.models import (
     WorkflowInput,
 )
 
-ASSIGNMENT_EVENT_TYPES = (
+CORE_ORDER_EVENT_TYPES = (
     "order_created",
     "payment_confirmed",
     "payment_failed",
@@ -468,16 +468,16 @@ async def test_invalid_transition_and_terminal_event_are_rejected(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("event_type", ASSIGNMENT_EVENT_TYPES)
-async def test_assignment_event_types_are_accepted_by_event_api(
+@pytest.mark.parametrize("event_type", CORE_ORDER_EVENT_TYPES)
+async def test_order_event_types_are_accepted_by_event_api(
     api_harness: ApiHarness,
     event_type: str,
 ) -> None:
-    """AT-28: every event named by the assignment reaches the Workflow Signal contract."""
+    """Validate that every supported order event reaches the Workflow Signal contract."""
 
     supervisor = await _create_supervisor(api_harness)
     run = await _start_run(api_harness, supervisor["id"])
-    event_id = f"assignment-{event_type}-{uuid4().hex}"
+    event_id = f"event-{event_type}-{uuid4().hex}"
 
     response = await api_harness.client.post(
         f"/api/runs/{run['id']}/events",
@@ -485,7 +485,7 @@ async def test_assignment_event_types_are_accepted_by_event_api(
             "event_id": event_id,
             "event_type": event_type,
             "occurred_at": "2026-09-04T12:00:00Z",
-            "payload": {"source": "assignment-acceptance"},
+            "payload": {"source": "order-acceptance"},
         },
     )
 

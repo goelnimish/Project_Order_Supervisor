@@ -82,7 +82,7 @@ Tracks the lifecycle snapshot of a supervised order.
 | `completed_at` | `TIMESTAMPTZ` | NULLABLE | `NULL` | Terminal completion timestamp. |
 
 #### Critical Database Invariant: Partial Unique Index
-To enforce the assignment requirement of **one active workflow per order**, PostgreSQL enforces a partial unique index:
+To enforce the core system requirement of **one active workflow per order**, PostgreSQL enforces a partial unique index:
 ```sql
 CREATE UNIQUE INDEX uq_runs_active_order_id ON runs (order_id)
 WHERE status NOT IN ('completed', 'terminated', 'failed');
