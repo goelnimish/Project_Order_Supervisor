@@ -348,7 +348,7 @@ separate typed Activity generates `final_summary`, `important_actions`,
 `runs.final_output`, and `GET /api/runs/{run_id}` returns it. An AI completion
 recommendation is audit data only and cannot end a Workflow.
 
-## Minimal Run Analytics
+## Run Analytics
 
 Global analytics report total runs, active/completed/terminated outcomes, the wake suppression
 rate, executed business actions, average time to first intervention, and the
@@ -379,16 +379,7 @@ set returns `null`. Active duration uses the current database time, while termin
 duration is `completed_at - started_at`.
 
 These GET endpoints need PostgreSQL and FastAPI only; they remain readable when
-Temporal or the Worker is unavailable. Use the persisted run UUID printed by
-the Stage 2 demo, or an existing Stage 3 run `id` returned by the runs API, to
-inspect both analytics views with:
-
-    make stage35-demo STAGE35_RUN_ID=<run-uuid>
-
-The smoke utility makes exactly the two analytics requests, validates the
-stable five-action distribution, prints both responses, and ends with
-`STAGE 3.5 ANALYTICS DEMO PASSED`.
-
+Temporal or the Worker is unavailable. 
 ## API surface
 
 | Method | Path | Purpose |
