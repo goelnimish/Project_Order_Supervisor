@@ -57,7 +57,7 @@ Within the explicitly requested stage, add a proposed feature only when it:
 
 Maintain `docs/ACCEPTANCE_MATRIX.md` throughout the project. The matrix must map
 each assignment requirement to its implementation location, test or validation
-evidence, walkthrough-video timestamp, and completion status.
+evidence, and completion status.
 
 ## Nested Instruction Files
 
@@ -452,9 +452,8 @@ The mandatory final deliverables are:
 1. Source code
 2. README with complete setup instructions
 3. Short architecture note
-4. Walkthrough video
 
-The final walkthrough must visibly demonstrate:
+The final system must visibly demonstrate:
 
 - creating or selecting a supervisor configuration;
 - starting an order run;
@@ -474,29 +473,6 @@ The final walkthrough must visibly demonstrate:
 - important actions;
 - key learnings;
 - recommendations or feedback.
-
-### Walkthrough Video Ownership
-
-The repository owner will manually record and upload the final walkthrough video.
-
-Codex must not attempt to record, generate, upload, or publish the walkthrough
-video.
-
-Codex may support the recording by preparing:
-
-- a deterministic demo scenario;
-- exact startup commands;
-- a walkthrough script;
-- narration notes;
-- a video checklist;
-- expected UI states;
-- recovery instructions;
-- a timestamp template.
-
-The walkthrough-video requirement must remain NOT STARTED until the repository
-owner has actually recorded and reviewed the video.
-
-Do not invent video evidence, video URLs, completion status, or timestamps.
 
 ## Validation Discipline
 
