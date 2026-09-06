@@ -65,9 +65,7 @@ In traditional systems, order exception handling either requires rigid rule engi
     ├── Makefile                     Local development commands
     └── .env.example                 Safe local configuration template
 
-The recording-support material is in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md),
-and the short system overview is in
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+The short system overview is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Prerequisites and install
 
@@ -314,9 +312,6 @@ Then, from the repository root, run:
 This stops PostgreSQL and Temporal while retaining their named volumes for the
 next session. Start again at step 2. Never expose this unauthenticated local POC
 to the public internet.
-
-For a timed narration and the exact expected UI evidence, use
-[`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
 
 ## Run the Stage 3 real-AI demo
 
