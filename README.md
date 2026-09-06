@@ -309,119 +309,6 @@ This stops PostgreSQL and Temporal while retaining their named volumes for the
 next session. Start again at step 2. Never expose this unauthenticated local POC
 to the public internet.
 
-## Run the Stage 3 real-AI demo
-
-First make sure Ollama is running, then install the exact model once:
-
-    ollama pull qwen3:1.7b
-
-Open four terminals in the repository root.
-
-Terminal 1 — start PostgreSQL and Temporal, verify them, and apply migrations:
-
-    make infra-up
-    make temporal-infra-check
-    make db-migrate
-
-Expected output includes both containers becoming `Healthy`, PostgreSQL
-`accepting connections`, Temporal `SERVING`, and Alembic using its PostgreSQL
-migration context. Re-running `make db-migrate` is safe.
-
-Upgrade safety gate — complete this before Terminal 2 when reusing an existing
-Temporal volume:
-
-    docker compose exec -T temporal temporal workflow list \
-      --address 127.0.0.1:7233 --query 'ExecutionStatus="Running"'
-
-A fresh setup should print no rows. If an upgrade from Stage 0–2 lists a running
-Workflow, do not start the Stage 3 Worker. Complete or gracefully terminate that
-execution while its old Worker is still available, verify the list is empty,
-and only then continue. Closed histories and both named volumes may remain.
-
-Terminal 2 — start the Worker and leave it running:
-
-    make temporal-worker
-
-Expected output includes `Temporal Worker starting` and the
-`order-supervisor` task queue.
-
-Terminal 3 — start FastAPI and leave it running:
-
-    make backend-dev
-
-Expected output includes `Application startup complete`. Interactive API
-documentation is at [http://localhost:8000/docs](http://localhost:8000/docs).
-
-Terminal 4 — verify the five routing cases, then run the API-driven real-AI
-scenario:
-
-    make ollama-eval
-    make stage3-demo STAGE3_PROVIDER=ollama
-
-The evaluator explicitly requires Ollama and `qwen3:1.7b`. It prints the model,
-selected action, latency, and pass/fail for payment failure, shipment delay,
-stalled fulfillment, a direct customer-update request, and an unknown issue.
-Success requires `5/5`.
-
-The Stage 3 demo creates a unique all-actions supervisor and order. It proves a
-startup inference, routine wake suppression, a real shipment-delay decision,
-persisted `message_logistics_team` execution, compact memory, a live instruction
-in later scheduled-inference context, deterministic delivered completion, and
-persisted final output. It prints the final report and full persistent timeline,
-then ends with:
-
-    STAGE 3 AI DEMO PASSED
-
-For the same scenario without Ollama, use the explicitly selected deterministic
-provider:
-
-    make stage3-demo STAGE3_PROVIDER=deterministic
-
-If the Ollama API or structured response fails, the Activity makes at most three
-attempts. The Workflow executes no unvalidated action, records a concise
-rejection, and schedules another durable review. It does not silently switch
-providers during that decision. Selecting the deterministic provider is the
-predictable fallback mode for development; final-output failure additionally
-uses a deterministic report so the Workflow-owned terminal result is never
-lost.
-
-Common recovery steps:
-
-- `Ollama is unavailable`: start the Ollama application or `ollama serve`, then
-  rerun the command.
-- `Required model qwen3:1.7b is missing`: run `ollama pull qwen3:1.7b`.
-- Temporal is unavailable: run `make temporal-infra-check`, then restart only
-  the Worker.
-- A database test reports a missing table: run `make db-migrate`.
-- A Docker port is allocated: use
-  `lsof -nP -iTCP:<port> -sTCP:LISTEN` and stop only a process you recognize.
-
-Never delete the named volumes merely to repair a migration.
-
-## Stage 3 validation record
-
-The recorded Stage 3 milestone validation on 2026-09-04 verified:
-
-- The then-current backend suite and Ruff lint/format checks passed. Detailed
-  milestone evidence is maintained in `docs/ACCEPTANCE_MATRIX.md`.
-- Fresh Stage 1 and Stage 2 regression demos passed.
-- `qwen3:1.7b` routing evaluation: 5/5. Observed latencies were 3.769 s
-  (payment), 3.536 s (shipment delay), 3.573 s (stalled fulfillment),
-  3.145 s (customer update), and 3.098 s (unknown issue).
-- Real-AI run `ee1bb484-ca11-474b-a4c7-2fa826efd452` ended
-  `STAGE 3 AI DEMO PASSED` with 24 distinct timeline keys and two distinct
-  simulated-action keys.
-- The model's initial workflow-start response was malformed. The contract
-  rejected it after bounded retries, persisted the safe outcome, executed no
-  action, and kept the Workflow alive. The later shipment-delay and scheduled
-  decisions were valid; the first selected `message_logistics_team`, and the
-  scheduled request contained the live instruction ID.
-- The delivered event, not the AI, authorized completion. The run persisted and
-  returned all four validated final-output fields.
-- Frontend lint and the canonical Next.js webpack production build passed. The
-  target explicitly uses webpack because Next's default Turbopack path could not
-  bind its internal local port in the Codex sandbox.
-
 ## Simulated business actions
 
 The exact executable action names are:
@@ -598,15 +485,6 @@ When finished, stop the API and Worker with `Ctrl+C`, then retain data while
 stopping infrastructure:
 
     make infra-down
-
-## Stage 3 upgrade boundary
-
-Stage 3 deliberately evolves the serialized result returned by the existing
-supervisor Activity. The upgrade safety gate appears before Worker startup in
-the demo instructions above because every pre-Stage-3 Workflow must finish
-under its old Worker first. This local validation began with no open legacy
-histories. Hot replay of an already-open Stage 1/2 execution is not supported
-by this POC; this is a code-deployment boundary, not a reason to delete data.
 
 ## Intentionally deferred
 
