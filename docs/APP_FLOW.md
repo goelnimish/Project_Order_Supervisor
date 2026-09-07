@@ -67,7 +67,7 @@ sequenceDiagram
         alt Outcome == SUPPRESS (Routine: e.g. payment_confirmed)
             Worker->>Worker: Update OrderState (payment='confirmed')
             Worker->>DB: Persist supervisor_wake_suppressed
-            Note over Worker: Return to sleep; LLM is NOT called
+            Note over Worker: Return to sleep - LLM is NOT called
             
         else Outcome == WAKE (Important: e.g. shipment_delayed)
             Worker->>Worker: Status -> RUNNING
@@ -113,7 +113,7 @@ sequenceDiagram
         
         alt Activity Retried (Key Exists in DB)
             DB-->>Act: Existing record returned (created=False)
-            Note over Act: Idempotent return; zero duplicate message
+            Note over Act: Idempotent return - zero duplicate message
         else First Execution
             DB-->>Act: Row inserted (created=True)
         end
@@ -151,7 +151,7 @@ sequenceDiagram
     Operator->>UI: Click "Pause Run"
     UI->>API: POST /api/runs/{id}/pause {reason: "Awaiting warehouse audit"}
     API->>Worker: Signal pause(PauseRequest)
-    Worker->>Worker: Status -> PAUSED (Signals still queued; timers frozen)
+    Worker->>Worker: Status -> PAUSED (Signals still queued, timers frozen)
     Worker->>DB: Persist workflow_paused & update run status='paused'
     
     Operator->>UI: Click "Resume Run"
@@ -198,7 +198,7 @@ sequenceDiagram
     
     UI->>API: GET /api/runs/{id}
     API->>DB: Query run snapshot & final_output
-    API-->>UI: 200 OK (renders 4-Quadrant Final Output Panel; stops polling)
+    API-->>UI: 200 OK (renders 4-Quadrant Final Output Panel, stops polling)
 ```
 
 ---
