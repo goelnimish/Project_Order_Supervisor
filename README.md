@@ -74,7 +74,7 @@ The short system overview is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - `uv`
 - Docker Desktop with Docker Compose
 - `make`
-- Ollama only for the optional real-model evaluation and Stage 3 AI demo
+- Ollama only for the optional real-model evaluation
 
 From the repository root:
 
